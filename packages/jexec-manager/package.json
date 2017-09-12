@@ -1,0 +1,32 @@
+{
+  "name": "jexec-manager",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "12factor-config": "^1.3.1",
+    "bluebird": "^3.5.0",
+    "body-parser": "^1.18.0",
+    "cors": "^2.8.4",
+    "debug": "^3.0.1",
+    "express": "^4.15.4",
+    "express-pino-logger": "^2.0.0",
+    "mongodb": "^2.2.31",
+    "mongoose": "^4.11.11",
+    "redis": "^2.8.0",
+    "socket.io": "^2.0.3"
+  },
+  "standard": {
+    "parser": "babel-eslint"
+  },
+  "devDependencies": {
+    "nodemon": "^1.12.0",
+    "standard": "^10.0.3"
+  }
+}

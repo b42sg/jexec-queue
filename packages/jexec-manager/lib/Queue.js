@@ -1,0 +1,99 @@
+const assert = require('assert')
+const debug = require('debug')('jexec-manager:queue')
+
+class Queue {
+  constructor ({ workers, jobs, stuckCleanerTime = 120 * 1000, stuckCleanerInterval = 120 * 1000 }) {
+    assert(jobs, 'jobs required')
+    assert(workers, 'workers required')
+
+    this.jobs = jobs
+    this.workers = workers
+    this.stuckCleanerTime = stuckCleanerTime
+    this.stuckCleanerInterval = stuckCleanerInterval
+
+    jobs.on('CREATED', this.handleJobCreated.bind(this))
+    jobs.on('ABORTED', this.handleJobAborted.bind(this))
+
+    workers.on('AVAILABLE', this.handleWorkerAvailable.bind(this))
+    workers.on('DROPPED', this.handleWorkerDropped.bind(this))
+    workers.on('RESULT', this.handleWorkerResult.bind(this))
+    workers.on('ERROR', this.handleWorkerError.bind(this))
+  }
+
+  async handleWorkerAvailable ({ workerId }) {
+    await this.processNextJob(workerId)
+  }
+
+  async handleWorkerDropped ({ workerId }) {
+    await this.jobs.failByWorkerId(workerId)
+  }
+
+  async handleJobAborted (job) {
+    await this.workers.abort(job.workerId)
+  }
+
+  async handleWorkerResult ({ workerId, result }) {
+    debug('result %j on worker %j', result, workerId)
+    await this.jobs.completeByWorkerId(workerId)
+    this.processNextJob(workerId)
+  }
+
+  async handleWorkerError ({ workerId, error }) {
+    debug('error %j on worker %j', error, workerId)
+    await this.jobs.failByWorkerId(workerId)
+    this.processNextJob(workerId)
+  }
+
+  async handleJobCreated ({ id, payload }) {
+    this.processNextJob(null, id, payload)
+  }
+
+  async processNextJob (workerId, jobId, payload) {
+    const [ job, worker ] = await Promise.all([
+      this.jobs.getAndLockNextToProcess(jobId),
+      this.workers.getOneAvailable(workerId, true)
+    ])
+
+    if (worker && job) {
+      await Promise.all([
+        this.jobs.process(job.id, worker.id),
+        this.workers.process(worker.id, job.id, job.payload)
+      ])
+    } else {
+      await Promise.all([
+        job && this.jobs.unlock(job.id),
+        worker && this.workers.unlock(worker.id)
+      ])
+    }
+  }
+
+  async cleanStuckEntities () {
+    const period = this.stuckCleanerTime
+    debug('clean stuck %j ms ago', period)
+    await Promise.all([ this.workers.cleanStuck({ period }), this.jobs.cleanStuck({ period }) ])
+  }
+
+  initStuckCleaner () {
+    this.stuckCleanerTimer = this.stuckCleanerInterval &&
+      this.stuckCleanerTime &&
+      setInterval(this.cleanStuckEntities.bind(this), this.stuckCleanerInterval)
+
+    debug('stuck cleaner inited with interval %j', this.stuckCleanerInterval)
+
+    this.isStuckCleanerInited = true
+  }
+
+  async run () {
+    if (!this.isStuckCleanerInited) {
+      this.initStuckCleaner()
+    }
+
+    let worker
+    do {
+      worker = await this.workers.getOneAvailable()
+      if (worker) this.processNextJob(worker.id)
+    } while (worker)
+  }
+}
+
+module.exports = Queue
