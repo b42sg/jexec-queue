@@ -21,7 +21,6 @@ module.exports = class Workers extends EventEmitter {
     socket.on('RESULT', data => this.handleSocketResult(socket, data))
     socket.on('ERROR', error => this.handleSocketError(socket, error))
     socket.on('disconnect', () => this.handleSocketDisconnect(socket))
-    socket.on('ping', () => console.log('ping'))
   }
 
   async handleSocketDisconnect (socket) {
@@ -39,12 +38,14 @@ module.exports = class Workers extends EventEmitter {
     let workerId
 
     if (id) {
-      const worker = await this.model.findOneAndUpdate(id, { reconnected_at: new Date() })
+      const worker = await this.model.findOneAndUpdate({ _id: id }, { reconnected_at: new Date() })
+      debug('found worker %j', worker && worker.id)
       workerId = worker ? worker.id : null
     }
 
     if (!workerId) {
       const worker = await this.model.create({})
+      debug('created worker %j', worker.id)
       workerId = worker.id
     }
 
@@ -92,8 +93,14 @@ module.exports = class Workers extends EventEmitter {
     return this.model.count(...args)
   }
 
-  async cleanStuck ({ period }) {
-    const filter = { _id: { $nin: Array.from(this.sockets.keys()) } }
-    await this.model.deleteMany(filter)
+  async cleanStuck () {
+    const ids = Array.from(this.sockets.keys())
+
+    debug('clean all not in %j', ids)
+
+    if (ids && ids.length) {
+      const filter = { _id: { $nin: ids } }
+      await this.model.deleteMany(filter)
+    }
   }
 }

@@ -16,6 +16,21 @@ const scheme = {
     env: 'MONGO_URL',
     default: 'mongodb://localhost:27017/jexec',
     required: true
+  },
+  log: {
+    env: 'LOG',
+    default: true,
+    type: 'boolean'
+  },
+  queueStuckJobsTimeout: {
+    env: 'QUEUE_STUCK_JOBS_TIMEOUT',
+    type: 'integer',
+    default: 10000
+  },
+  queueStuckCleanerInterval: {
+    env: 'QUEUE_STUCK_CLEANER_INTERVAL',
+    type: 'integer',
+    default: 10000
   }
 }
 

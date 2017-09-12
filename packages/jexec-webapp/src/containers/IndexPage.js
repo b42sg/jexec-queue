@@ -1,6 +1,5 @@
 import React, { PureComponent } from 'react'
 import moment from 'moment'
-import { assign } from 'lodash'
 import { TableCell } from 'material-ui'
 import Button from 'material-ui/Button'
 import Typography from 'material-ui/Typography'
@@ -23,7 +22,7 @@ export default class IndexPage extends PureComponent {
       { name: 'actions', title: ' ' }
     ],
     rows: [],
-    allowedPageSizes: [5, 10, 15, 100],
+    allowedPageSizes: [10, 50, 100, 0],
   }
 
   componentDidMount() {
@@ -78,7 +77,7 @@ export default class IndexPage extends PureComponent {
           <Button disabled style={{ marginLeft: 15 }} raised color='accent'>Abort</Button>
         </div>
         <DataGrid rows={rows} columns={columns}>
-          <PagingState defaultCurrentPage={0} defaultPageSize={100} />
+          <PagingState defaultCurrentPage={0} defaultPageSize={0} />
           <LocalPaging />
           <TableView tableCellTemplate={this.tableCellTemplate} />
           <TableHeaderRow />

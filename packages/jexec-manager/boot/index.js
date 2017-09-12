@@ -11,11 +11,17 @@ module.exports = async function boot (options) {
 
   const server = await bootServer({
     ...services,
+    log: options.log,
     host: options.serverHost,
     port: options.serverPort
   })
 
-  const queue = await bootQueue({ io, ...services })
+  const queue = await bootQueue({
+    io,
+    stuckJobsTimeout: options.queueStuckJobsTimeout,
+    stuckCleanerInterval: options.queueStuckCleanerInterval,
+    ...services
+  })
 
   io.attach(server)
   queue.run()

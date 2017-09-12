@@ -32,7 +32,6 @@ class LongMenu extends React.Component {
           <MoreVertIcon />
         </IconButton>
         <Menu
-          id="long-menu"
           anchorEl={this.state.anchorEl}
           open={this.state.open}
           onRequestClose={this.handleRequestClose}

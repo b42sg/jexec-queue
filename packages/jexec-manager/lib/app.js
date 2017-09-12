@@ -14,11 +14,15 @@ const errorHandler = () => function errorHandler (err, req, res, next) {
   res.json({ error: err.message || err })
 }
 
-module.exports = function ({ jobs, workers }) {
+module.exports = function ({ jobs, workers, log }) {
   const app = express()
 
   app.use(cors({ credentials: true, origin: 'http://localhost:3000' }))
-  app.use(pinoLogger())
+
+  if (log) {
+    app.use(pinoLogger())
+  }
+
   app.use(bodyParser.json())
   app.use(createRouter({ jobs, workers }))
   app.use(errorHandler())

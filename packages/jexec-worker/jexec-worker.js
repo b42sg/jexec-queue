@@ -2,10 +2,13 @@
 'use strict'
 
 const io = require('socket.io-client')
+const path = require('path')
 const config = require('./config')
 const debug = require('debug')('jexec-worker')
 
-const task = require('./task')
+const taskScript = process.argv[2] || path.join(__dirname, './task')
+
+const task = require(taskScript)
 
 const url = config.managerUrl
 const delay = config.delay
@@ -21,6 +24,7 @@ let completedPayload
 
 socket.on('connect', () => {
   socket.emit('REGISTER', workerId, function (id) {
+    debug('last completed %j %j %j %j', hasDisconnected, completedEvent, completedPayload, workerId)
     if (hasDisconnected && workerId === id && completedEvent) {
       debug('send last completed %j %j', completedEvent, completedPayload)
       socket.emit(completedEvent, completedPayload)

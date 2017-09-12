@@ -61,9 +61,10 @@ module.exports = class Jobs extends EventEmitter {
 
   async cleanStuck ({ period }) {
     const startedBefore = new Date(new Date() - period)
+    debug('clean stuck %j ms ago (%j)', period, startedBefore)
     const filter = { status: { $in: ['processing', 'locked'] }, started_at: { $lt: startedBefore } }
     const update = { status: 'failed', failed_at: new Date(), $unset: { workerId: 1 } }
 
-    await this.model.update(filter, update)
+    await this.model.update(filter, update, { multi: true })
   }
 }

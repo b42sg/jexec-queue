@@ -2,13 +2,13 @@ const assert = require('assert')
 const debug = require('debug')('jexec-manager:queue')
 
 class Queue {
-  constructor ({ workers, jobs, stuckCleanerTime = 120 * 1000, stuckCleanerInterval = 120 * 1000 }) {
+  constructor ({ workers, jobs, stuckJobsTimeout, stuckCleanerInterval }) {
     assert(jobs, 'jobs required')
     assert(workers, 'workers required')
 
     this.jobs = jobs
     this.workers = workers
-    this.stuckCleanerTime = stuckCleanerTime
+    this.stuckJobsTimeout = stuckJobsTimeout
     this.stuckCleanerInterval = stuckCleanerInterval
 
     jobs.on('CREATED', this.handleJobCreated.bind(this))
@@ -68,14 +68,13 @@ class Queue {
   }
 
   async cleanStuckEntities () {
-    const period = this.stuckCleanerTime
+    const period = this.stuckJobsTimeout
     debug('clean stuck %j ms ago', period)
-    await Promise.all([ this.workers.cleanStuck({ period }), this.jobs.cleanStuck({ period }) ])
+    await Promise.all([ this.workers.cleanStuck(), this.jobs.cleanStuck({ period }) ])
   }
 
   initStuckCleaner () {
-    this.stuckCleanerTimer = this.stuckCleanerInterval &&
-      this.stuckCleanerTime &&
+    this.stuckJobsTimer = this.stuckCleanerInterval && this.stuckJobsTimeout &&
       setInterval(this.cleanStuckEntities.bind(this), this.stuckCleanerInterval)
 
     debug('stuck cleaner inited with interval %j', this.stuckCleanerInterval)
