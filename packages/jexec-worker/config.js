@@ -2,7 +2,7 @@ const Config = require('12factor-config')
 
 const scheme = {
   managerUrl: {
-    env: 'MANAGER_URL',
+    env: 'GRID_URL',
     default: 'http://localhost:8088',
     required: true
   },
