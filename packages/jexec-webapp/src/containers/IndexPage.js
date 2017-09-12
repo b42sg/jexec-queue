@@ -1,10 +1,12 @@
 import React, { PureComponent } from 'react'
 import moment from 'moment'
+import { get } from 'lodash'
 import { TableCell } from 'material-ui'
 import Button from 'material-ui/Button'
 import Badge from 'reactstrap/lib/Badge'
 import Typography from 'material-ui/Typography'
 import { PagingState, LocalPaging, SelectionState } from '@devexpress/dx-react-grid'
+import everyLimit from 'async/everyLimit'
 import { Grid as DataGrid, TableView, TableHeaderRow, PagingPanel, TableSelection } from '@devexpress/dx-react-grid-material-ui'
 
 import api from '../api'
@@ -23,6 +25,7 @@ export default class IndexPage extends PureComponent {
       { name: 'actions', title: ' ' }
     ],
     rows: [],
+    selectedRows: [],
     allowedPageSizes: [10, 50, 100, 0],
   }
 
@@ -43,21 +46,72 @@ export default class IndexPage extends PureComponent {
   }
 
   async abortJob (jobId) {
-    api.put(`/jobs/${jobId}/aborted`)
+    return api.put(`/jobs/${jobId}/aborted`)
   }
 
   async removeJob (jobId) {
-    api.delete(`/jobs/${jobId}`)
+    return api.delete(`/jobs/${jobId}`)
   }
 
-  handleJobRequestAbort = jobId => this.abortJob(jobId)
-  handleJobRequestRemove = jobId => this.removeJob(jobId)
+  abortSelectedJobs = () => {
+    this.block()
+
+    everyLimit(
+      this.getSelectedIds(),
+      5,
+      (id, cb) => this.abortJob(id).then(() => cb(null, true)).catch(cb),
+      () => this.loadData().then(this.unblock, this.unblock)
+    )
+
+    this.setState({ selectedRows: [] })
+  }
+
+  removeSelectedJobs = () => {
+    this.block()
+
+    everyLimit(
+      this.getSelectedIds(),
+      5,
+      (id, cb) => this.removeJob(id).then(() => cb(null, true)).catch(cb),
+      () => this.loadData().then(this.unblock, this.unblock)
+    )
+
+    this.setState({ selectedRows: [] })
+  }
+
+  getSelectedIds() {
+    const { selectedRows, rows } = this.state
+    return selectedRows.map(rowIndex => get(rows, `${rowIndex}.id`))
+  }
+
+  handleJobsAbortClick = () => {
+    this.abortSelectedJobs()
+  }
+
+  handleJobsRemoveClick = () => {
+    this.removeSelectedJobs()
+  }
+
+  handleJobRequestAbort = jobId => {
+    this.block()
+    this.abortJob(jobId).then(this.unblock, this.unblock)
+  }
+
+  handleJobRequestRemove = jobId => {
+    this.block()
+    this.removeJob(jobId).then(this.unblock, this.unblock)
+  }
+
+  handleSelectionChange = selectedRows => this.setState({ selectedRows })
 
   async loadData() {
     const response = await api.get('/jobs')
     const { data } = response.data
     this.setState({ rows: data })
   }
+
+  block = () => this.setState({ blocked: true })
+  unblock = () => this.setState({ blocked: false })
 
   tableCellTemplate = ({ row, column, style }) => {
     if (/_at$/.test(column.name)) { // date
@@ -87,10 +141,28 @@ export default class IndexPage extends PureComponent {
   }
 
   render() {
-    const { rows, columns, allowedPageSizes } = this.state;
+    const { rows, columns, allowedPageSizes, selectedRows, blocked } = this.state;
 
     return (
       <div style={{ width: 1200, margin: 'auto' }}>
+        {blocked &&
+          <div
+            style={{
+              zIndex: '1000',
+              border: 'none',
+              margin: '0px',
+              padding: '0px',
+              width: '100%',
+              height: '100%',
+              top: '0px',
+              left: '0px',
+              backgroundColor: 'rgb(0, 0, 0)',
+              opacity: '0.6',
+              cursor: 'wait',
+              position: 'fixed'
+            }}
+          />
+        }
         <div style={{ padding: 10, marginBottom: 20, marginTop: 20, borderBottom: 'solid 1px #777' }}>
           <Typography style={{ position: 'relative' }} type='display1' gutterBottom>
             Jobs
@@ -100,15 +172,30 @@ export default class IndexPage extends PureComponent {
           </Typography>
         </div>
         <div style={{ marginBottom: 20 }}>
-          <Button disabled raised color='accent'>Remove</Button>
-          <Button disabled style={{ marginLeft: 15 }} raised color='accent'>Abort</Button>
+          <Button
+            raised
+            disabled={!selectedRows.length}
+            color='accent'
+            onClick={this.handleJobsRemoveClick}
+          >
+            Remove
+          </Button>
+          <Button
+            raised
+            disabled={!selectedRows.length}
+            style={{ marginLeft: 15 }}
+            color='accent'
+            onClick={this.handleJobsAbortClick}
+          >
+            Abort
+          </Button>
         </div>
         <DataGrid rows={rows} columns={columns}>
           <PagingState defaultCurrentPage={0} defaultPageSize={0} />
           <LocalPaging />
           <TableView tableCellTemplate={this.tableCellTemplate} />
           <TableHeaderRow />
-          <SelectionState />
+          <SelectionState selection={selectedRows} onSelectionChange={this.handleSelectionChange} />
           <TableSelection />
           <PagingPanel allowedPageSizes={allowedPageSizes} />
         </DataGrid>

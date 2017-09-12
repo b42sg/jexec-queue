@@ -19,3 +19,8 @@ DELAY=50000 GRID_URL=http://localhost:8088 DEBUG=jexec-worker* ./jexec-worker.js
 **DEBUG** - see [debug](https://www.npmjs.com/package/debug)
 
 **./task.js** - job executor (defaults to `./task.js`)
+
+
+```
+for i in {1..3}; do DELAY=1${i}000 DEBUG=jexec-worker* ./jexec-worker.js &; done
+```
