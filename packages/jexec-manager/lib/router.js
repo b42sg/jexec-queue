@@ -11,7 +11,7 @@ module.exports = function ({ jobs, workers }) {
   router.get('/jobs', async function (req, res, next) {
     try {
       const [ data, count ] = await Promise.all([
-        jobs.find(),
+        jobs.find({}, null, { sort: { created_at: -1 } }),
         jobs.count()
       ])
 
@@ -25,6 +25,26 @@ module.exports = function ({ jobs, workers }) {
     try {
       const data = pick(req.body, ['value'])
       const resp = await jobs.create(data)
+      res.json(resp)
+    } catch (err) {
+      next(err)
+    }
+  })
+
+  router.put('/jobs/:jobId/aborted', async function (req, res, next) {
+    try {
+      const jobId = req.params.jobId
+      const resp = await jobs.abort(jobId)
+      res.json(resp)
+    } catch (err) {
+      next(err)
+    }
+  })
+
+  router.delete('/jobs/:jobId', async function (req, res, next) {
+    try {
+      const jobId = req.params.jobId
+      const resp = await jobs.remove(jobId)
       res.json(resp)
     } catch (err) {
       next(err)

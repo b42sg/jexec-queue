@@ -17,12 +17,15 @@ const socket = io(url)
 
 let timer
 let workerId
+let processing = false // @TODO debug
 
 let completedEvent
 let hasDisconnected
 let completedPayload
 
 socket.on('connect', () => {
+  debug('connect %j processing %j', workerId, processing)
+
   socket.emit('REGISTER', workerId, function (id) {
     debug('last completed %j %j %j %j', hasDisconnected, completedEvent, completedPayload, workerId)
     if (hasDisconnected && workerId === id && completedEvent) {
@@ -44,6 +47,8 @@ socket.on('disconnect', () => {
 })
 
 socket.on('ABORT', () => {
+  debug('abort %j', workerId)
+
   if (timer) {
     clearTimeout(timer)
     timer = null

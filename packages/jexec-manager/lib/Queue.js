@@ -13,6 +13,7 @@ class Queue {
 
     jobs.on('CREATED', this.handleJobCreated.bind(this))
     jobs.on('ABORTED', this.handleJobAborted.bind(this))
+    jobs.on('REMOVED', this.handleJobAborted.bind(this))
 
     workers.on('AVAILABLE', this.handleWorkerAvailable.bind(this))
     workers.on('DROPPED', this.handleWorkerDropped.bind(this))
@@ -29,7 +30,13 @@ class Queue {
   }
 
   async handleJobAborted (job) {
-    await this.workers.abort(job.workerId)
+    debug('handle job abort %j', job)
+
+    if (job.workerId) {
+      await this.workers.abort(job.workerId)
+    }
+
+    this.processNextJob()
   }
 
   async handleWorkerResult ({ workerId, result }) {

@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react'
 import moment from 'moment'
 import { TableCell } from 'material-ui'
 import Button from 'material-ui/Button'
+import Badge from 'reactstrap/lib/Badge'
 import Typography from 'material-ui/Typography'
 import { PagingState, LocalPaging, SelectionState } from '@devexpress/dx-react-grid'
 import { Grid as DataGrid, TableView, TableHeaderRow, PagingPanel, TableSelection } from '@devexpress/dx-react-grid-material-ui'
@@ -41,6 +42,17 @@ export default class IndexPage extends PureComponent {
     clearTimeout(this.reloadTimer)
   }
 
+  async abortJob (jobId) {
+    api.put(`/jobs/${jobId}/aborted`)
+  }
+
+  async removeJob (jobId) {
+    api.delete(`/jobs/${jobId}`)
+  }
+
+  handleJobRequestAbort = jobId => this.abortJob(jobId)
+  handleJobRequestRemove = jobId => this.removeJob(jobId)
+
   async loadData() {
     const response = await api.get('/jobs')
     const { data } = response.data
@@ -53,7 +65,22 @@ export default class IndexPage extends PureComponent {
       const text = value ? moment(value).calendar() : '-'
       return <TableCell>{text}</TableCell>
     } else if (column.name === 'actions') {
-      return <TableCell style={{ textAlign: 'right' }}><Actions /></TableCell>
+      return (
+        <TableCell style={{ textAlign: 'right' }}>
+          <Actions value={row.id} onRequestAbort={this.handleJobRequestAbort} onRequestRemove={this.handleJobRequestRemove} />
+        </TableCell>
+      )
+    } else if (column.name === 'status') {
+      const value = row[column.name]
+      const color = ({
+        locked: 'info',
+        failed: 'danger',
+        pending: 'warning',
+        aborted: 'default',
+        completed: 'success',
+        processing: 'primary'
+      })[value]
+      return <TableCell><Badge style={{ fontSize: 12 }} color={color}>{value}</Badge></TableCell>
     }
 
     return undefined;

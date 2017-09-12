@@ -77,6 +77,16 @@ module.exports = class Workers extends EventEmitter {
     socket.emit('PROCESS', { jobId, payload })
   }
 
+  async abort (workerId) {
+    debug('abort worker %j', workerId)
+    const socket = this.sockets.get(workerId)
+    if (socket) {
+      socket.emit('ABORT')
+    }
+
+    await this.model.updateOne({ _id: workerId }, { status: 'pending' })
+  }
+
   async getOneAvailable (workerId, lock) {
     const filter = { status: 'pending', _id: { $in: Array.from(this.sockets.keys()) } }
     if (workerId) filter._id = workerId

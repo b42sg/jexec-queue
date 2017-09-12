@@ -10,6 +10,29 @@ module.exports = class Jobs extends EventEmitter {
   async create (payload) {
     const job = await this.model.create({ payload, status: 'pending' })
     this.emit('CREATED', job)
+    return job
+  }
+
+  async abort (jobId) {
+    debug('abort job %j', jobId)
+    const filter = { _id: jobId, status: { $in: ['locked', 'pending', 'processing'] } }
+    const update = { status: 'aborted', aborted_at: new Date() }
+    const result = await this.model.findOneAndUpdate(filter, update)
+    this.emit('ABORTED', result)
+    return result;
+  }
+
+  async remove(jobId) {
+    debug('remove %j', jobId)
+
+    const job = await this.model.findById(jobId)
+
+    if (job) {
+      await this.model.deleteOne({ _id: jobId })
+      this.emit('REMOVED', job)
+    }
+
+    return true
   }
 
   find (...args) {

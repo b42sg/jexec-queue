@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 import IconButton from 'material-ui/IconButton';
 import Menu, { MenuItem } from 'material-ui/Menu';
 import MoreVertIcon from 'material-ui-icons/MoreVert';
@@ -6,19 +6,34 @@ import MoreVertIcon from 'material-ui-icons/MoreVert';
 
 const ITEM_HEIGHT = 48;
 
-class LongMenu extends React.Component {
+class LongMenu extends Component {
+  static defaultProps = {
+    onRequestAbort: () => {},
+    onRequestRemove: () => {}
+  }
+
   state = {
     anchorEl: null,
-    open: false,
-  };
+    open: false
+  }
 
   handleClick = event => {
-    this.setState({ open: true, anchorEl: event.currentTarget });
-  };
+    this.setState({ open: true, anchorEl: event.currentTarget })
+  }
 
   handleRequestClose = () => {
-    this.setState({ open: false });
-  };
+    this.setState({ open: false })
+  }
+
+  handleAbortClick = () => {
+    this.props.onRequestAbort(this.props.value)
+    this.setState({ open: false })
+  }
+
+  handleRemoveClick = () => {
+    this.props.onRequestRemove(this.props.value)
+    this.setState({ open: false })
+  }
 
   render() {
     return (
@@ -42,8 +57,8 @@ class LongMenu extends React.Component {
             },
           }}
         >
-          <MenuItem onClick={this.handleRequestClose}>Abort</MenuItem>
-          <MenuItem onClick={this.handleRequestClose}>Remove</MenuItem>
+          <MenuItem onClick={this.handleAbortClick}>Abort</MenuItem>
+          <MenuItem onClick={this.handleRemoveClick}>Remove</MenuItem>
         </Menu>
       </div>
     );
