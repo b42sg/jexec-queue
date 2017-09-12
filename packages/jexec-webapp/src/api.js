@@ -23,4 +23,4 @@ export function createHttpClient ({ baseURL = '' } = {}) {
   return http
 }
 
-export default createHttpClient({ baseURL: 'http://localhost:8088' })
+export default createHttpClient({ baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8088' })
