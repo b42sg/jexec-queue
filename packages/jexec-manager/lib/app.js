@@ -5,7 +5,15 @@ const pinoLogger = require('express-pino-logger')
 
 const createRouter = require('./router')
 
-// const auth = () => 
+const auth = () => (req, res, next) => {
+  if (!req.query.api_key) {
+    res.status(401)
+    res.json({ error: 'Unauthorized' })
+    return
+  }
+
+  next()
+}
 
 const errorHandler = () => function errorHandler (err, req, res, next) {
   if (res.headersSent) {
@@ -18,6 +26,8 @@ const errorHandler = () => function errorHandler (err, req, res, next) {
 
 module.exports = function ({ jobs, workers, log, corsOrigin }) {
   const app = express()
+
+  app.use(auth())
 
   if (corsOrigin) {
     app.use(cors({ credentials: true, origin: corsOrigin }))

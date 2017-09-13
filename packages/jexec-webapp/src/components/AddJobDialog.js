@@ -22,7 +22,7 @@ class AddJobDialog extends React.Component {
   // handleChange = event => this.setState({ value: event.target.value.replace(/[^\d]*/, '') })
   handleChange = event => this.setState({ value: event.target.value })
   handleKeyPress = event => {
-    if(event.key == 'Enter') {
+    if(event.key === 'Enter') {
       this.props.onRequestAdd(this.state.value)
     }
   }
