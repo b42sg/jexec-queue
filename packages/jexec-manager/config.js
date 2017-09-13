@@ -25,12 +25,12 @@ const scheme = {
   queueStuckJobsTimeout: {
     env: 'QUEUE_STUCK_JOBS_TIMEOUT',
     type: 'integer',
-    default: 60000
+    default: 120000
   },
   queueStuckCleanerInterval: {
     env: 'QUEUE_STUCK_CLEANER_INTERVAL',
     type: 'integer',
-    default: 60000
+    default: 120000
   }
 }
 
