@@ -41,6 +41,10 @@ QUEUE_STUCK_CLEANER_INTERVAL=120000 \
 
 warning - QUEUE_STUCK_JOBS_TIMEOUT should be approximately > then average job execution time
 
+# API Docs
+
+see http://petstore.swagger.io/?url=https://raw.githubusercontent.com/b42sg/jexec-queue/master/packages/jexec-manager/swagger.json
+
 ### add jobs
 
 ```
