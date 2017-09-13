@@ -1,0 +1,169 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "jexec-queue API",
+    "version": "1.0.0",
+    "title": "jexec-queue API"
+  },
+  "host": "localhost:8088",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "job",
+      "description": "Everything about Jobs"
+    },
+    {
+      "name": "status",
+      "description": "Grid Status"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/status": {
+      "get": {
+        "tags": [
+          "status"
+        ],
+        "summary": "Get system status",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/jobs": {
+      "get": {
+        "tags": [
+          "job"
+        ],
+        "summary": "Get List of Jobs",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "job"
+        ],
+        "summary": "Create a new Job",
+        "description": "",
+        "operationId": "addJob",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "value",
+            "description": "Job value",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NewJob"
+            }
+          }
+        ],
+        "responses": {
+          "405": {
+            "description": "Invalid input"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/jobs/{jobId}": {
+      "delete": {
+        "tags": [
+          "job"
+        ],
+        "summary": "Deletes a Job",
+        "description": "",
+        "operationId": "deleteJob",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "description": "Job id to delete",
+            "required": true,
+            "type": "string",
+            "format": "string"
+          }
+        ],
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid ID supplied"
+          }
+        }
+      }
+    },
+    "/jobs/{jobId}/aborted": {
+      "put": {
+        "tags": [
+          "job"
+        ],
+        "summary": "Aborts a Job",
+        "description": "Abort Job",
+        "operationId": "abortJob",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "description": "Job id to abort",
+            "required": true,
+            "type": "string",
+            "format": "string"
+          }
+        ],
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid ID supplied"
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "api_key": {
+      "type": "apiKey",
+      "name": "api_key",
+      "in": "query"
+    }
+  },
+  "definitions": {
+    "NewJob": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
