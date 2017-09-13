@@ -94,12 +94,12 @@ export default class IndexPage extends PureComponent {
 
   handleJobRequestAbort = jobId => {
     this.block()
-    this.abortJob(jobId).then(this.unblock, this.unblock)
+    this.abortJob(jobId).then(this.loadData.bind(this)).then(this.unblock, this.unblock)
   }
 
   handleJobRequestRemove = jobId => {
     this.block()
-    this.removeJob(jobId).then(this.unblock, this.unblock)
+    this.removeJob(jobId).then(this.loadData.bind(this)).then(this.unblock, this.unblock)
   }
 
   handleSelectionChange = selectedRows => this.setState({ selectedRows })
@@ -115,7 +115,10 @@ export default class IndexPage extends PureComponent {
   handleAddJobDialogRequestClose = () => this.setState({ isAddJobDialogOpen: false })
 
   async loadData() {
+    if (this.loading) return
+    this.loading = true
     const response = await api.get('/jobs')
+    this.loading = false
     const { data } = response.data
     this.setState({ rows: data })
   }

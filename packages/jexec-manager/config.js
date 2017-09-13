@@ -22,6 +22,10 @@ const scheme = {
     default: true,
     type: 'boolean'
   },
+  corsOrigin: {
+    env: 'CORS_ORIGIN',
+    default: 'http://localhost:3000'
+  },
   queueStuckJobsTimeout: {
     env: 'QUEUE_STUCK_JOBS_TIMEOUT',
     type: 'integer',

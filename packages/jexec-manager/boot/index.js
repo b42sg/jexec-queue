@@ -13,7 +13,8 @@ module.exports = async function boot (options) {
     ...services,
     log: options.log,
     host: options.serverHost,
-    port: options.serverPort
+    port: options.serverPort,
+    corsOrigin: options.corsOrigin
   })
 
   const queue = await bootQueue({
