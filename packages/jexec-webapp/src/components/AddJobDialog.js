@@ -43,7 +43,7 @@ class AddJobDialog extends React.Component {
             value={value}
             maxLength={12}
             onChange={this.handleChange}
-            placeholder='Recipient'
+            placeholder='Input'
             onKeyPress={this.handleKeyPress}
           />
         </DialogContent>

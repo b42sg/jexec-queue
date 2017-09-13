@@ -50,9 +50,9 @@ module.exports = class Jobs extends EventEmitter {
     return this.model.update(filter, update)
   }
 
-  async completeByWorkerId (workerId) {
+  async completeByWorkerId (workerId, result) {
     const filter = { workerId, status: 'processing' }
-    const update = { status: 'completed', completed_at: new Date(), $unset: { workerId: 1 } }
+    const update = { result, status: 'completed', completed_at: new Date(), $unset: { workerId: 1 } }
     return this.model.update(filter, update)
   }
 

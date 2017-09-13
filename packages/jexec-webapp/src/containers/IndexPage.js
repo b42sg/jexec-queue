@@ -1,18 +1,26 @@
 import React, { PureComponent } from 'react'
-import moment from 'moment'
-import { get } from 'lodash'
+import { get, find } from 'lodash'
 import { TableCell } from 'material-ui'
 import Button from 'material-ui/Button'
-import Badge from 'reactstrap/lib/Badge'
 import Typography from 'material-ui/Typography'
 import { PagingState, LocalPaging, SelectionState } from '@devexpress/dx-react-grid'
 import everyLimit from 'async/everyLimit'
-import { Grid as DataGrid, TableView, TableHeaderRow, PagingPanel, TableSelection } from '@devexpress/dx-react-grid-material-ui'
+import {
+  Grid as DataGrid,
+  TableView, TableHeaderRow,
+  PagingPanel,
+  TableSelection
+} from '@devexpress/dx-react-grid-material-ui'
+
+import axios from 'axios'
 
 import api from '../api'
 
 import BlockUI from '../components/BlockUI'
+import renderDate from '../components/renderDate'
 import AddJobDialog from '../components/AddJobDialog'
+import renderStatus from '../components/renderStatus'
+import JobDetailsDialog from '../components/JobDetailsDialog'
 import ActionsIconButton from '../components/ActionsIconButton'
 
 const RELOAD_PERIOD = 3000
@@ -30,6 +38,7 @@ export default class IndexPage extends PureComponent {
     ],
     rows: [],
     selectedRows: [],
+    detailsJobId: null,
     allowedPageSizes: [10, 50, 100, 0]
   }
 
@@ -38,10 +47,9 @@ export default class IndexPage extends PureComponent {
     this.initReloadTimer()
   }
 
-  initReloadTimer () {
+  initReloadTimer = () => {
     this.reloadTimer = setTimeout(() => {
-      this.loadData()
-      this.initReloadTimer()
+      this.loadData().then(this.initReloadTimer, this.initReloadTimer)
     }, RELOAD_PERIOD)
   }
 
@@ -114,12 +122,20 @@ export default class IndexPage extends PureComponent {
 
   handleAddJobDialogRequestClose = () => this.setState({ isAddJobDialogOpen: false })
 
+  handleRequestDetails = detailsJobId => this.setState({ detailsJobId })
+
+  handleJobDetailsRequestClose = () => this.setState({ detailsJobId: null })
+
   async loadData() {
-    if (this.loading) return
-    this.loading = true
-    const response = await api.get('/jobs')
-    this.loading = false
+    if (this.cancelTokenSource) {
+      this.cancelTokenSource.cancel()
+    }
+
+    const cancelTokenSource = axios.CancelToken.source()
+    this.cancelTokenSource = cancelTokenSource
+    const response = await api.get('/jobs', { cancelToken: cancelTokenSource.token })
     const { data } = response.data
+    this.cancelTokenSource = null
     this.setState({ rows: data })
   }
 
@@ -128,9 +144,7 @@ export default class IndexPage extends PureComponent {
 
   tableCellTemplate = ({ row, column, style }) => {
     if (/_at$/.test(column.name)) { // date
-      const value = row[column.name]
-      const text = value ? moment(value).calendar() : '-'
-      return <TableCell>{text}</TableCell>
+      return <TableCell>{renderDate({ date: row[column.name] })}</TableCell>
     } else if (column.name === 'actions') {
       return (
         <TableCell style={{ textAlign: 'right' }}>
@@ -138,31 +152,26 @@ export default class IndexPage extends PureComponent {
             value={row.id}
             onRequestAbort={this.handleJobRequestAbort}
             onRequestRemove={this.handleJobRequestRemove}
+            onRequestDetails={this.handleRequestDetails}
           />
         </TableCell>
       )
     } else if (column.name === 'status') {
-      const value = row[column.name]
-      const color = ({
-        locked: 'info',
-        failed: 'danger',
-        pending: 'warning',
-        aborted: 'default',
-        completed: 'success',
-        processing: 'primary'
-      })[value]
-      return <TableCell><Badge style={{ fontSize: 12 }} color={color}>{value}</Badge></TableCell>
+      return <TableCell>{renderStatus({ status: row[column.name] })}</TableCell>
     }
 
     return undefined
   }
 
   render () {
-    const { rows, columns, allowedPageSizes, selectedRows, blocked, isAddJobDialogOpen } = this.state
+    const { rows, columns, allowedPageSizes, selectedRows, blocked, isAddJobDialogOpen, detailsJobId } = this.state
+
+    const details = detailsJobId ? find(rows, { id: detailsJobId }) : {}
 
     return (
       <div style={{ width: 1200, margin: 'auto' }}>
         {blocked && <BlockUI />}
+        <JobDetailsDialog open={!!detailsJobId} item={details} onRequestClose={this.handleJobDetailsRequestClose} />
         <AddJobDialog
           open={isAddJobDialogOpen}
           onRequestAdd={this.handleAddJobDialogRequestAdd}

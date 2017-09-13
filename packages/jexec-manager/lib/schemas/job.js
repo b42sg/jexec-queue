@@ -7,6 +7,7 @@ const schema = new Schema({
     enum: ['pending', 'processing', 'completed', 'aborted', 'failed', 'locked'],
     default: 'pending'
   },
+  result: 'object',
   locked: 'boolean',
   payload: 'object',
   workerId: 'string',

@@ -41,7 +41,7 @@ class Queue {
 
   async handleWorkerResult ({ workerId, result }) {
     debug('result %j on worker %j', result, workerId)
-    await this.jobs.completeByWorkerId(workerId)
+    await this.jobs.completeByWorkerId(workerId, result)
     this.processNextJob(workerId)
   }
 

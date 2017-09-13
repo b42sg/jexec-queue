@@ -68,7 +68,7 @@ socket.on('PROCESS', message => {
   timer = setTimeout(() => {
     task(payload, function (error, result) {
       const event = error ? 'ERROR' : 'RESULT'
-      const payload = error ? { error } : { result }
+      const payload = error || result
 
       debug(event + ' %j' + (hasDisconnected ? ' but disconnected' : ''), payload)
 

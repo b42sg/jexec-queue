@@ -9,7 +9,8 @@ const ITEM_HEIGHT = 48;
 class LongMenu extends Component {
   static defaultProps = {
     onRequestAbort: () => {},
-    onRequestRemove: () => {}
+    onRequestRemove: () => {},
+    onRequestDetails: () => {}
   }
 
   state = {
@@ -27,6 +28,11 @@ class LongMenu extends Component {
 
   handleAbortClick = () => {
     this.props.onRequestAbort(this.props.value)
+    this.setState({ open: false })
+  }
+
+  handleDetailsClick = () => {
+    this.props.onRequestDetails(this.props.value)
     this.setState({ open: false })
   }
 
@@ -57,6 +63,7 @@ class LongMenu extends Component {
             },
           }}
         >
+          <MenuItem onClick={this.handleDetailsClick}>Details</MenuItem>
           <MenuItem onClick={this.handleAbortClick}>Abort</MenuItem>
           <MenuItem onClick={this.handleRemoveClick}>Remove</MenuItem>
         </Menu>
