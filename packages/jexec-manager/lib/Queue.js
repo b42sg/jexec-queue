@@ -32,7 +32,7 @@ class Queue {
   async handleJobAborted (job) {
     debug('handle job abort %j', job)
 
-    if (job.workerId) {
+    if (job.workerId && job.status === 'processing') {
       await this.workers.abort(job.workerId)
     }
 
