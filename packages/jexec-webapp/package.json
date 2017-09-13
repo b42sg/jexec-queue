@@ -26,6 +26,9 @@
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
+  "standard": {
+    "parser": "babel-eslint"
+  },
   "devDependencies": {
     "babel-eslint": "^7.2.3",
     "standard": "^10.0.3"

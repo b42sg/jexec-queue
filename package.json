@@ -1,6 +1,10 @@
 {
   "license": "ISC",
-	"devDependencies": {
-		"lerna": "^2.1.2"
-	}
+  "devDependencies": {
+    "babel-eslint": "^8.0.0",
+    "lerna": "^2.1.2"
+  },
+  "standard": {
+    "parser": "babel-eslint"
+  }
 }

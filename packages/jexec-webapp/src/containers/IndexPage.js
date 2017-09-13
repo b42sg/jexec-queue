@@ -11,7 +11,11 @@ import { Grid as DataGrid, TableView, TableHeaderRow, PagingPanel, TableSelectio
 
 import api from '../api'
 
-import Actions from './Actions'
+import BlockUI from '../components/BlockUI'
+import AddJobDialog from '../components/AddJobDialog'
+import ActionsIconButton from '../components/ActionsIconButton'
+
+const RELOAD_PERIOD = 3000
 
 export default class IndexPage extends PureComponent {
   state = {
@@ -26,10 +30,10 @@ export default class IndexPage extends PureComponent {
     ],
     rows: [],
     selectedRows: [],
-    allowedPageSizes: [10, 50, 100, 0],
+    allowedPageSizes: [10, 50, 100, 0]
   }
 
-  componentDidMount() {
+  componentDidMount () {
     this.loadData()
     this.initReloadTimer()
   }
@@ -38,10 +42,10 @@ export default class IndexPage extends PureComponent {
     this.reloadTimer = setTimeout(() => {
       this.loadData()
       this.initReloadTimer()
-    }, 2000)
+    }, RELOAD_PERIOD)
   }
 
-  componentWillUmount() {
+  componentWillUmount () {
     clearTimeout(this.reloadTimer)
   }
 
@@ -53,33 +57,29 @@ export default class IndexPage extends PureComponent {
     return api.delete(`/jobs/${jobId}`)
   }
 
+  async addJob (value) {
+    return api.post('/jobs', { value })
+  }
+
   abortSelectedJobs = () => {
     this.block()
-
-    everyLimit(
-      this.getSelectedIds(),
-      5,
-      (id, cb) => this.abortJob(id).then(() => cb(null, true)).catch(cb),
-      () => this.loadData().then(this.unblock, this.unblock)
-    )
-
+    const ids = this.getSelectedIds()
+    const iteratee = (id, cb) => this.abortJob(id).then(() => cb(null, true)).catch(cb)
+    const callback = () => this.loadData().then(this.unblock, this.unblock)
+    everyLimit(ids, 5, iteratee, callback)
     this.setState({ selectedRows: [] })
   }
 
   removeSelectedJobs = () => {
     this.block()
-
-    everyLimit(
-      this.getSelectedIds(),
-      5,
-      (id, cb) => this.removeJob(id).then(() => cb(null, true)).catch(cb),
-      () => this.loadData().then(this.unblock, this.unblock)
-    )
-
+    const ids = this.getSelectedIds()
+    const iteratee = (id, cb) => this.removeJob(id).then(() => cb(null, true)).catch(cb)
+    const callback = () => this.loadData().then(this.unblock, this.unblock)
+    everyLimit(ids, 5, iteratee, callback)
     this.setState({ selectedRows: [] })
   }
 
-  getSelectedIds() {
+  getSelectedIds () {
     const { selectedRows, rows } = this.state
     return selectedRows.map(rowIndex => get(rows, `${rowIndex}.id`))
   }
@@ -104,6 +104,16 @@ export default class IndexPage extends PureComponent {
 
   handleSelectionChange = selectedRows => this.setState({ selectedRows })
 
+  handleAddJobClick = () => this.setState({ isAddJobDialogOpen: true })
+
+  handleAddJobDialogRequestAdd = value => {
+    this.block()
+    this.addJob(value).then(this.loadData.bind(this)).then(this.unblock)
+    this.setState({ isAddJobDialogOpen: false })
+  }
+
+  handleAddJobDialogRequestClose = () => this.setState({ isAddJobDialogOpen: false })
+
   async loadData() {
     const response = await api.get('/jobs')
     const { data } = response.data
@@ -121,7 +131,11 @@ export default class IndexPage extends PureComponent {
     } else if (column.name === 'actions') {
       return (
         <TableCell style={{ textAlign: 'right' }}>
-          <Actions value={row.id} onRequestAbort={this.handleJobRequestAbort} onRequestRemove={this.handleJobRequestRemove} />
+          <ActionsIconButton
+            value={row.id}
+            onRequestAbort={this.handleJobRequestAbort}
+            onRequestRemove={this.handleJobRequestRemove}
+          />
         </TableCell>
       )
     } else if (column.name === 'status') {
@@ -137,36 +151,29 @@ export default class IndexPage extends PureComponent {
       return <TableCell><Badge style={{ fontSize: 12 }} color={color}>{value}</Badge></TableCell>
     }
 
-    return undefined;
+    return undefined
   }
 
-  render() {
-    const { rows, columns, allowedPageSizes, selectedRows, blocked } = this.state;
+  render () {
+    const { rows, columns, allowedPageSizes, selectedRows, blocked, isAddJobDialogOpen } = this.state
 
     return (
       <div style={{ width: 1200, margin: 'auto' }}>
-        {blocked &&
-          <div
-            style={{
-              zIndex: '1000',
-              border: 'none',
-              margin: '0px',
-              padding: '0px',
-              width: '100%',
-              height: '100%',
-              top: '0px',
-              left: '0px',
-              backgroundColor: 'rgb(0, 0, 0)',
-              opacity: '0.6',
-              cursor: 'wait',
-              position: 'fixed'
-            }}
-          />
-        }
+        {blocked && <BlockUI />}
+        <AddJobDialog
+          open={isAddJobDialogOpen}
+          onRequestAdd={this.handleAddJobDialogRequestAdd}
+          onRequestClose={this.handleAddJobDialogRequestClose}
+        />
         <div style={{ padding: 10, marginBottom: 20, marginTop: 20, borderBottom: 'solid 1px #777' }}>
           <Typography style={{ position: 'relative' }} type='display1' gutterBottom>
             Jobs
-            <Button style={{ position: 'absolute', right: -10, top: 5 }} raised color='primary'>
+            <Button
+              raised
+              color='primary'
+              style={{ position: 'absolute', right: -10, top: 5 }}
+              onClick={this.handleAddJobClick}
+            >
               + Add Job
             </Button>
           </Typography>
@@ -200,6 +207,6 @@ export default class IndexPage extends PureComponent {
           <PagingPanel allowedPageSizes={allowedPageSizes} />
         </DataGrid>
       </div>
-    );
+    )
   }
 }
