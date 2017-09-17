@@ -13,9 +13,9 @@ walk through `packages/` and run each app separately (see instructions)
 # RFE
 
 * pagnination is implemented on UI side
-* workers can became "zombie" reconnection and auto-killing should get implemented
+* workers can become "zombie" - reconnection and auto-killing should get implemented
 * there are no indicies set in mongo
-* "clean stuck jobs" algo is pretty weak and whould be properly implemented
-* socket is not protected f.e by an api key
+* "clean stuck jobs" algo is pretty weak and should be properly implemented
+* socket is not protected (f.e by an api key)
 * manager is not scaleable
-* there should be protection against worker contentions
+* there should be some protection against worker contentions
